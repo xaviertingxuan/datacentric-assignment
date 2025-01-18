@@ -1,0 +1,4 @@
+[
+    { "id": 1, "title": "Learn JavaScript", "desc": "Work through tutorials", "date": "2024-11-30" },
+    { "id": 2, "title": "Complete Portfolio Project", "desc": "Build CRUD app", "date": "2024-12-05" }
+  ]
