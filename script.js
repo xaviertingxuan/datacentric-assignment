@@ -5,7 +5,6 @@ const searchInput = document.getElementById('search-input');
 
 // Task Array to Store Data
 let tasks = [];
-let token = localStorage.getItem('token');
 
 // Track currently edited task
 let editingTaskId = null;
@@ -16,11 +15,7 @@ const API_URL = 'http://localhost:3000/api';
 // Fetch Tasks from API
 async function fetchTasks() {
   try {
-    const response = await fetch(`${API_URL}/tasks`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const response = await fetch(`${API_URL}/tasks`);
     if (!response.ok) throw new Error('Failed to fetch tasks');
     tasks = await response.json();
     renderTasks();
@@ -48,8 +43,7 @@ taskForm.addEventListener('submit', async (e) => {
         response = await fetch(`${API_URL}/tasks/${editingTaskId}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(taskData)
         });
@@ -58,8 +52,7 @@ taskForm.addEventListener('submit', async (e) => {
         response = await fetch(`${API_URL}/tasks`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(taskData)
         });
@@ -83,11 +76,7 @@ searchInput.addEventListener('input', async (e) => {
   const query = e.target.value.trim();
   if (query) {
     try {
-      const response = await fetch(`${API_URL}/tasks/search?query=${encodeURIComponent(query)}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(`${API_URL}/tasks/search?query=${encodeURIComponent(query)}`);
       if (!response.ok) throw new Error('Failed to search tasks');
       tasks = await response.json();
       renderTasks();
