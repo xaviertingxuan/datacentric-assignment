@@ -195,13 +195,15 @@ function renderTasks(tasks) {
             taskElement.draggable = true;
             taskElement.dataset.taskId = task._id;
             
+            // Add drag event listeners
             taskElement.addEventListener('dragstart', handleDragStart);
             taskElement.addEventListener('dragend', handleDragEnd);
-            taskElement.addEventListener('click', () => showTaskDetails(task));
             
             taskElement.innerHTML = `
                 <div class="task-info">
-                    <div class="task-title">${task.title}</div>
+                    <div class="task-title" onclick="showTaskDetails(${JSON.stringify(task).replace(/"/g, '&quot;')})">
+                        ${task.title}
+                    </div>
                 </div>
                 <span class="badge priority-${task.priority}">${task.priority}</span>
             `;
@@ -211,23 +213,26 @@ function renderTasks(tasks) {
     });
 }
 
-// Add drag and drop handlers
+// Update the drag and drop handlers
 function handleDragStart(e) {
-    const row = e.target.closest('tr');
-    if (!row) return;
+    const taskItem = e.target.closest('.task-item');
+    if (!taskItem) return;
     
-    row.classList.add('dragging');
+    taskItem.classList.add('dragging');
     e.dataTransfer.setData('application/json', JSON.stringify({
-        taskId: row.dataset.taskId,
-        currentStatus: row.closest('.task-table').id.replace('-tasks', '')
+        taskId: taskItem.dataset.taskId,
+        currentStatus: taskItem.closest('.task-column').dataset.status
     }));
     e.dataTransfer.effectAllowed = 'move';
 }
 
 function handleDragEnd(e) {
-    e.target.classList.remove('dragging');
-    document.querySelectorAll('.task-column').forEach(col => {
-        col.classList.remove('drag-over');
+    const taskItem = e.target.closest('.task-item');
+    if (taskItem) {
+        taskItem.classList.remove('dragging');
+    }
+    document.querySelectorAll('.status-dropzone').forEach(dropzone => {
+        dropzone.classList.remove('drag-over');
     });
 }
 
@@ -259,8 +264,8 @@ async function handleDrop(e) {
             const task = tasks.find(t => t._id === taskId);
             if (!task) throw new Error('Task not found');
 
+            // Only send necessary fields for update
             const updateData = {
-                ...task,
                 status: newStatus
             };
 
@@ -278,6 +283,13 @@ async function handleDrop(e) {
                 throw new Error(errorData.error || 'Failed to update task status');
             }
 
+            // Update local task data
+            task.status = newStatus;
+            
+            // Re-render tasks without fetching
+            renderTasks(tasks);
+            
+            // Fetch tasks to ensure sync with server
             await fetchTasks();
         }
     } catch (error) {
@@ -287,8 +299,9 @@ async function handleDrop(e) {
     }
 }
 
-// Initialize drag and drop
+// Update the initialization function
 function initializeDragAndDrop() {
+    // Add drag and drop event listeners to dropzones
     const dropzones = document.querySelectorAll('.status-dropzone');
     dropzones.forEach(dropzone => {
         dropzone.addEventListener('dragover', handleDragOver);
