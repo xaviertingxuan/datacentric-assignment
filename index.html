@@ -5,12 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Task Manager</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
   <header>
     <h1>Task Manager</h1>
+    <div id="auth-section">
+      <!-- Show when user is not logged in -->
+      <div id="login-register-forms">
+        <form id="login-form" class="auth-form">
+          <input type="email" id="login-email" placeholder="Email" required>
+          <input type="password" id="login-password" placeholder="Password" required>
+          <button type="submit">Login</button>
+        </form>
+        <button id="show-register">New User? Register</button>
+        
+        <form id="register-form" class="auth-form" style="display: none;">
+          <input type="text" id="register-username" placeholder="Username" required>
+          <input type="email" id="register-email" placeholder="Email" required>
+          <input type="password" id="register-password" placeholder="Password" required>
+          <button type="submit">Register</button>
+        </form>
+      </div>
+      
+      <!-- Show when user is logged in -->
+      <div id="user-info" style="display: none;">
+        <span id="username-display"></span>
+        <button id="logout-btn">Logout</button>
+      </div>
+    </div>
   </header>
-  <main>
+  <main id="main-content">
     <section class="task-form">
       <h2>Add a New Task</h2>
       <form id="task-form">
@@ -19,6 +44,27 @@
         
         <label for="task-desc">Description:</label>
         <textarea id="task-desc" placeholder="Enter task description" required></textarea>
+        
+        <label for="task-category">Category:</label>
+        <select id="task-category" required>
+          <option value="">Select a category</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+        </select>
+        
+        <label for="task-priority">Priority:</label>
+        <select id="task-priority" required>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+        
+        <label for="task-status">Status:</label>
+        <select id="task-status" required>
+          <option value="pending">Pending</option>
+          <option value="in-progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
         
         <label for="task-date">Due Date:</label>
         <input type="date" id="task-date" required>
@@ -29,9 +75,70 @@
     
     <section class="task-list">
       <h2>Task List</h2>
-      <ul id="tasks">
-        <!-- Tasks will be dynamically added here -->
-      </ul>
+      <div class="task-filters">
+        <input type="text" id="search-input" placeholder="Search tasks...">
+        <select id="category-filter">
+          <option value="">All Categories</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+        </select>
+      </div>
+      
+      <div class="task-tables">
+        <div class="task-column" data-status="pending">
+          <h3>Pending</h3>
+          <table class="task-table" id="pending-tasks">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Pending tasks will be added here -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="task-column" data-status="in-progress">
+          <h3>In Progress</h3>
+          <table class="task-table" id="in-progress-tasks">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- In-progress tasks will be added here -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="task-column" data-status="completed">
+          <h3>Completed</h3>
+          <table class="task-table" id="completed-tasks">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Completed tasks will be added here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
   <script src="script.js"></script>

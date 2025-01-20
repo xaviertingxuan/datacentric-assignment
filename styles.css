@@ -16,12 +16,11 @@ body {
   }
   
   main {
-    max-width: 800px;
+    max-width: 1400px;
     margin: 2rem auto;
     padding: 1rem;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: transparent;
+    box-shadow: none;
   }
   
   h1, h2 {
@@ -30,7 +29,14 @@ body {
   }
   
   .task-form {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
     margin-bottom: 2rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
   }
   
   .task-form form {
@@ -42,6 +48,13 @@ body {
   .task-form input, .task-form textarea, .task-form button {
     padding: 0.5rem;
     font-size: 1rem;
+  }
+  
+  .task-list {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
   }
   
   .task-list ul {
@@ -84,4 +97,274 @@ body {
       flex-direction: column;
       gap: 0.5rem;
     }
+  }
+
+  /* Update the task table styles */
+  .task-tables {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+  }
+
+  .task-column {
+    flex: 1;
+    min-width: 450px;
+    max-width: 600px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+  }
+
+  .task-column h3 {
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  .task-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 10px;
+  }
+
+  .task-table th,
+  .task-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+
+  .task-table th {
+    font-weight: 600;
+    color: #666;
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .task-table td {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  /* Task content styling */
+  .task-content {
+    margin-bottom: 8px;
+  }
+
+  .task-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: block;
+    font-size: 1rem;
+  }
+
+  .task-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    max-height: none;
+    overflow: visible;
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    -webkit-box-orient: unset;
+    line-orient: unset;
+    line-height: 1.4;
+  }
+
+  /* Adjust column widths for wider layout */
+  .task-table th:nth-child(1),
+  .task-table td:nth-child(1) { width: 45%; }
+  .task-table th:nth-child(2),
+  .task-table td:nth-child(2) { width: 15%; }
+  .task-table th:nth-child(3),
+  .task-table td:nth-child(3) { width: 12%; }
+  .task-table th:nth-child(4),
+  .task-table td:nth-child(4) { width: 13%; }
+  .task-table th:nth-child(5),
+  .task-table td:nth-child(5) { width: 15%; }
+
+  /* Priority colors with better contrast */
+  .priority-high { 
+    color: #dc3545;
+    font-weight: 600;
+  }
+  .priority-medium { 
+    color: #fd7e14;
+    font-weight: 600;
+  }
+  .priority-low { 
+    color: #28a745;
+    font-weight: 600;
+  }
+
+  /* Task actions styling */
+  .task-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    white-space: nowrap;
+  }
+
+  .task-actions button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+
+  .task-actions button.edit {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .task-actions button.edit:hover {
+    background-color: #0056b3;
+  }
+
+  .task-actions button.delete {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .task-actions button.delete:hover {
+    background-color: #c82333;
+  }
+
+  /* Empty state styling */
+  .empty-state {
+    text-align: center;
+    color: #6c757d;
+    padding: 20px !important;
+    font-style: italic;
+  }
+
+  /* Drag and drop styling */
+  .task-table tr {
+    cursor: move;
+    transition: all 0.2s ease;
+    background-color: white;
+  }
+
+  .task-table tr:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .task-table tr.dragging {
+    opacity: 0.5;
+    background-color: #f0f0f0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .task-column.drag-over {
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 2px dashed #666;
+  }
+
+  /* Category badge styling */
+  .category-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .category-work {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+  }
+
+  .category-personal {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+  }
+
+  /* Update responsive breakpoint for wider layout */
+  @media (max-width: 1400px) {
+    .task-tables {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .task-column {
+      min-width: 100%;
+      max-width: none;
+    }
+  }
+
+  /* Add spacing between filters and table */
+  .task-filters {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .task-filters input,
+  .task-filters select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95rem;
+  }
+
+  .task-filters input {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  /* Add these styles to your existing CSS */
+  .task-table tr {
+    cursor: move;
+  }
+
+  .task-table tr.dragging {
+    opacity: 0.5;
+    background-color: #f0f0f0;
+  }
+
+  .task-column.drag-over {
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 2px dashed #666;
+  }
+
+  /* Prevent text selection while dragging */
+  .task-table tr {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Add visual feedback for draggable items */
+  .task-table tr:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  /* Add a subtle transition for smoother visual feedback */
+  .task-table tr {
+    transition: all 0.2s ease;
+  }
+
+  .dragging {
+    opacity: 0.5;
+    cursor: move;
   }
