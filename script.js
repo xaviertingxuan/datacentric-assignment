@@ -26,32 +26,21 @@ let editingTaskId = null;
 // Authentication Functions
 async function login(email, password) {
     try {
-        console.log('Attempting login with:', { email });
-        
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-
-        console.log('Login response status:', response.status);
         const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'Login failed');
-        }
-        
-        console.log('Login successful:', data);
+        if (!response.ok) throw new Error(data.error);
         
         token = data.token;
-        currentUser = data.user;
+        currentUser = data.user; // Store the entire user object
         localStorage.setItem('token', token);
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
-        
+        localStorage.setItem('currentUser', JSON.stringify(data.user)); // Store user data
         showAuthenticatedUI();
         await fetchTasks();
     } catch (error) {
-        console.error('Login error:', error);
         alert(error.message);
     }
 }
@@ -252,10 +241,6 @@ function renderTasks(tasks) {
     
     // Initialize drag and drop after rendering
     initializeDragAndDrop();
-    
-    // Add debug log to verify dropzones
-    const dropzones = document.querySelectorAll('.status-dropzone');
-    console.log('Found dropzones:', dropzones.length);
 }
 
 // Update the drag and drop handlers
@@ -265,7 +250,7 @@ function handleDragStart(e) {
     
     taskItem.classList.add('dragging');
     
-    // Store both taskId and current status
+    // Find the closest task column to get the correct status
     const taskColumn = taskItem.closest('.task-column');
     const currentStatus = taskColumn ? taskColumn.dataset.status : null;
     
@@ -274,103 +259,122 @@ function handleDragStart(e) {
         return;
     }
     
+    // Store task data
     const taskData = {
         taskId: taskItem.dataset.taskId,
         currentStatus: currentStatus
     };
     
-    console.log('Starting drag with data:', taskData);
+    // Set drag data
     e.dataTransfer.setData('text/plain', JSON.stringify(taskData));
     e.dataTransfer.effectAllowed = 'move';
 }
 
 function handleDragEnd(e) {
-    const taskItem = e.target.closest('.task-item');
-    if (taskItem) {
-        taskItem.classList.remove('dragging');
-    }
+    // Remove dragging class from all items
+    document.querySelectorAll('.task-item').forEach(item => {
+        item.classList.remove('dragging');
+    });
+    
+    // Remove drag-over class from all dropzones
     document.querySelectorAll('.status-dropzone').forEach(zone => {
         zone.classList.remove('drag-over');
     });
 }
 
 function handleDragOver(e) {
+    // Prevent default to allow drop
     e.preventDefault();
+    
     const dropzone = e.target.closest('.status-dropzone');
-    if (dropzone) {
-        e.dataTransfer.dropEffect = 'move';
-        dropzone.classList.add('drag-over');
-    }
-}
-
-function handleDragLeave(e) {
-    const dropzone = e.target.closest('.status-dropzone');
-    if (dropzone) {
-        dropzone.classList.remove('drag-over');
-    }
+    if (!dropzone) return;
+    
+    // Set the dropEffect to move
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Remove drag-over class from all dropzones
+    document.querySelectorAll('.status-dropzone').forEach(zone => {
+        zone.classList.remove('drag-over');
+    });
+    
+    // Add drag-over class to current dropzone
+    dropzone.classList.add('drag-over');
 }
 
 async function handleDrop(e) {
     e.preventDefault();
+    
     const dropzone = e.target.closest('.status-dropzone');
     if (!dropzone) return;
     
     dropzone.classList.remove('drag-over');
     
     try {
-        const taskDataString = e.dataTransfer.getData('text/plain');
-        console.log('Dropped task data string:', taskDataString);
-        
-        const taskData = JSON.parse(taskDataString);
-        console.log('Parsed task data:', taskData);
-        
-        const newStatus = dropzone.dataset.status;
-        console.log('New status:', newStatus);
-        
+        // Get the dragged task data
+        const taskData = JSON.parse(e.dataTransfer.getData('text/plain'));
         if (!taskData.taskId || !taskData.currentStatus) {
             throw new Error('Invalid task data');
         }
         
+        const newStatus = dropzone.dataset.status;
+        if (!newStatus) {
+            throw new Error('Invalid drop target');
+        }
+        
         // Only update if status changed
         if (taskData.currentStatus !== newStatus) {
-            console.log('Sending update request for task:', taskData.taskId);
+            // Find the task in our local array
+            const task = tasks.find(t => t._id === taskData.taskId);
+            if (!task) throw new Error('Task not found');
             
+            // Prepare update data
+            const updateData = {
+                status: newStatus
+            };
+
+            console.log('Updating task status:', {
+                taskId: taskData.taskId,
+                oldStatus: taskData.currentStatus,
+                newStatus: newStatus
+            });
+
+            // Update task status in backend
             const response = await fetch(`${API_URL}/tasks/${taskData.taskId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify(updateData)
             });
             
-            console.log('Update response status:', response.status);
+            const updatedTask = await response.json();
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update task status');
+                throw new Error(updatedTask.error || 'Failed to update task status');
             }
             
-            const updatedTask = await response.json();
-            console.log('Received updated task:', updatedTask);
-            
-            // Update local tasks array
+            // Update the task in our local array
             const taskIndex = tasks.findIndex(t => t._id === taskData.taskId);
             if (taskIndex !== -1) {
-                tasks[taskIndex] = updatedTask;
+                tasks[taskIndex] = { ...tasks[taskIndex], ...updatedTask };
             }
             
-            // Re-render tasks immediately
+            // Re-render tasks immediately with updated data
             renderTasks(tasks);
+            
+            // Fetch fresh data from server to ensure sync
+            await fetchTasks();
         }
     } catch (error) {
         console.error('Error updating task status:', error);
         alert('Failed to update task status. Please try again.');
+        // Refresh tasks to ensure consistent state
         await fetchTasks();
     }
 }
 
-// Initialize drag and drop
+// Update the initialization function
 function initializeDragAndDrop() {
     // Remove existing listeners first
     document.querySelectorAll('.status-dropzone').forEach(dropzone => {
@@ -385,6 +389,15 @@ function initializeDragAndDrop() {
         dropzone.addEventListener('drop', handleDrop);
         dropzone.addEventListener('dragleave', handleDragLeave);
     });
+}
+
+// Add dragleave handler
+function handleDragLeave(e) {
+    e.preventDefault();
+    const dropzone = e.target.closest('.status-dropzone');
+    if (dropzone) {
+        dropzone.classList.remove('drag-over');
+    }
 }
 
 // Event Listeners
