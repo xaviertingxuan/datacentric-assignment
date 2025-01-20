@@ -56,8 +56,10 @@ async function register(username, email, password) {
         if (!response.ok) throw new Error(data.error);
         
         token = data.token;
-        currentUser = { username: data.username }; // Create user object with username
+        currentUser = data.user; // Store the complete user object
         localStorage.setItem('token', token);
+        localStorage.setItem('currentUser', JSON.stringify(data.user)); // Store complete user data
+        
         showAuthenticatedUI();
         await fetchTasks();
     } catch (error) {
@@ -401,28 +403,50 @@ function handleDragLeave(e) {
 }
 
 // Event Listeners
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    await login(email, password);
-});
+document.addEventListener('DOMContentLoaded', () => {
+    // Existing event listeners
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        await login(email, password);
+    });
 
-registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('register-username').value;
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
-    await register(username, email, password);
-});
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('register-username').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        await register(username, email, password);
+    });
 
-showRegisterBtn.addEventListener('click', () => {
-    loginForm.style.display = 'none';
-    registerForm.style.display = 'block';
-    showRegisterBtn.style.display = 'none';
-});
+    showRegisterBtn.addEventListener('click', () => {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        showRegisterBtn.style.display = 'none';
+    });
 
-logoutBtn.addEventListener('click', logout);
+    // Add the back to login button listener here
+    document.getElementById('show-login').addEventListener('click', showLoginForm);
+
+    logoutBtn.addEventListener('click', logout);
+
+    // Rest of your existing DOMContentLoaded code...
+    if (token) {
+        try {
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            showAuthenticatedUI();
+            fetchTasks().then(() => {
+                initializeDragAndDrop();
+            });
+        } catch (error) {
+            console.error('Error restoring user session:', error);
+            logout();
+        }
+    } else {
+        showUnauthenticatedUI();
+    }
+});
 
 taskForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -615,4 +639,11 @@ function showTaskDetails(task) {
 // Add helper function to check if task is overdue
 function isOverdue(dueDate) {
     return new Date(dueDate) < new Date().setHours(0, 0, 0, 0);
+}
+
+// Add this function to show login form
+function showLoginForm() {
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+    showRegisterBtn.style.display = 'block';
 }
