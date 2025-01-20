@@ -1,5 +1,5 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -10,76 +10,69 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+const client = new MongoClient(process.env.MONGODB_URI);
+let db;
 
-// Models
-const Task = require('./models/Task');
-
-// Task Routes
-app.get('/api/tasks', async (req, res) => {
+async function connectDB() {
   try {
-    const tasks = await Task.find();
-    res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.post('/api/tasks', async (req, res) => {
-  try {
-    const task = new Task(req.body);
-    const newTask = await task.save();
-    res.status(201).json(newTask);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-app.put('/api/tasks/:id', async (req, res) => {
-  try {
-    const task = await Task.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
+    await client.connect();
+    db = client.db('taskmanager'); // Replace 'taskmanager' with your actual database name
+    
+    // Create compound text index for both title and description fields
+    await db.collection('tasks').createIndex(
+      {
+        title: "text",
+        desc: "text"
+      },
+      {
+        weights: {
+          title: 2,    // Give title higher priority in search results
+          desc: 1
+        },
+        name: "TaskSearchIndex"
+      }
     );
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-    res.json(task);
+    
+    console.log('Connected to MongoDB');
+    return db;
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
   }
-});
+}
 
-app.delete('/api/tasks/:id', async (req, res) => {
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
   try {
-    const task = await Task.findByIdAndDelete(req.params.id);
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-    res.json({ message: 'Task deleted' });
+    await client.close();
+    console.log('MongoDB connection closed');
+    process.exit(0);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error closing MongoDB connection:', error);
+    process.exit(1);
   }
 });
 
-// Search tasks
-app.get('/api/tasks/search', async (req, res) => {
+// Initialize database connection and start server
+async function startServer() {
   try {
-    const { query } = req.query;
-    const tasks = await Task.find({
-      $or: [
-        { title: { $regex: query, $options: 'i' } },
-        { desc: { $regex: query, $options: 'i' } }
-      ]
-    });
-    res.json(tasks);
+    // Wait for DB connection
+    db = await connectDB();
+    
+    // Make db available to routes
+    app.locals.db = db;
+    
+    // Routes
+    const taskRoutes = require('./routes/taskRoutes');
+    app.use('/api/tasks', taskRoutes);
+    
+    // Start server
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
-});
+}
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`)); 
+startServer(); 

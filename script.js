@@ -37,6 +37,7 @@ taskForm.addEventListener('submit', async (e) => {
     try {
       const taskData = { title, desc, date };
       let response;
+      let updatedTask;
 
       if (editingTaskId) {
         // Update existing task
@@ -47,6 +48,14 @@ taskForm.addEventListener('submit', async (e) => {
           },
           body: JSON.stringify(taskData)
         });
+        
+        if (!response.ok) throw new Error('Failed to update task');
+        updatedTask = await response.json();
+        
+        // Update the task in the local array
+        tasks = tasks.map(task => 
+          task._id === editingTaskId ? updatedTask : task
+        );
       } else {
         // Add new task
         response = await fetch(`${API_URL}/tasks`, {
@@ -56,13 +65,15 @@ taskForm.addEventListener('submit', async (e) => {
           },
           body: JSON.stringify(taskData)
         });
+        
+        if (!response.ok) throw new Error('Failed to create task');
+        const newTask = await response.json();
+        tasks.push(newTask);
       }
 
-      if (!response.ok) throw new Error('Failed to save task');
-      
       editingTaskId = null;
       document.querySelector('#task-form button[type="submit"]').textContent = 'Add Task';
-      await fetchTasks();
+      renderTasks();
       taskForm.reset();
     } catch (error) {
       console.error('Error:', error);
@@ -100,8 +111,8 @@ function renderTasks() {
         <p>${task.desc}</p>
       </div>
       <div>
-        <button onclick="editTask(${task.id})">Edit</button>
-        <button onclick="deleteTask(${task.id})">Delete</button>
+        <button onclick="editTask('${task._id}')">Edit</button>
+        <button onclick="deleteTask('${task._id}')">Delete</button>
       </div>
     `;
     tasksList.appendChild(li);
@@ -110,21 +121,34 @@ function renderTasks() {
 
 // Edit Task
 function editTask(id) {
-  const task = tasks.find(t => t.id === id);
+  const task = tasks.find(t => t._id === id);
   if (task) {
     editingTaskId = id;
     document.getElementById('task-title').value = task.title;
     document.getElementById('task-desc').value = task.desc;
     document.getElementById('task-date').value = task.date;
-    // Update submit button text
     document.querySelector('#task-form button[type="submit"]').textContent = 'Update Task';
   }
 }
 
 // Delete Task
-function deleteTask(id) {
-  tasks = tasks.filter(task => task.id !== id);
-  renderTasks();
+async function deleteTask(id) {
+  try {
+    const response = await fetch(`${API_URL}/tasks/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Failed to delete task');
+    
+    tasks = tasks.filter(task => task._id !== id);
+    renderTasks();
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Failed to delete task');
+  }
 }
 
 // Initialize App
