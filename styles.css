@@ -44,17 +44,81 @@ body {
     font-size: 1rem;
   }
   
-  .task-list ul {
-    list-style: none;
-    padding: 0;
+  .task-list {
+    margin-top: 20px;
   }
   
-  .task-list li {
+  .tasks {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .task-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    padding: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .task-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  
+  .task-content {
+    flex: 1;
+  }
+  
+  .task-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .task-date {
+    color: #666;
+    font-size: 0.9em;
+    margin: 5px 0;
+  }
+  
+  .task-desc {
+    margin: 10px 0;
+    line-height: 1.4;
+  }
+  
+  .no-tasks {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+    background: #f9f9f9;
+    border-radius: 4px;
+  }
+  
+  .error {
+    color: #f44336;
+    text-align: center;
+    padding: 20px;
+    background: #fee;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+  
+  .tasks li {
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    padding: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem;
-    border-bottom: 1px solid #ddd;
+  }
+  
+  .tasks li button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
   }
   
   .task-list button {

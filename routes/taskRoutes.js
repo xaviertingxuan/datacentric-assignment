@@ -6,12 +6,33 @@ const { ObjectId } = require('mongodb');
 router.get('/', async (req, res) => {
   try {
     const db = req.app.locals.db;
-    const tasks = await db.collection('tasks')
-      .find()
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
+
+    const tasksCollection = db.collection('tasks');
+    
+    // Add sorting to show newest tasks first
+    const tasks = await tasksCollection
+      .find({})
       .sort({ createdAt: -1 })
       .toArray();
-    res.json(tasks);
+    
+    // Format dates and ensure all required fields exist
+    const formattedTasks = tasks.map(task => ({
+      _id: task._id,
+      title: task.title || '',
+      desc: task.desc || '',
+      date: task.date || new Date().toISOString().split('T')[0],
+      status: task.status || 'pending',
+      createdAt: task.createdAt || new Date(),
+      updatedAt: task.updatedAt || new Date()
+    }));
+
+    console.log(`Sending ${formattedTasks.length} tasks to client`);
+    res.json(formattedTasks);
   } catch (error) {
+    console.error('Error fetching tasks:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -20,7 +41,13 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const db = req.app.locals.db;
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
+
     const { title, desc, date } = req.body;
+    console.log('Received task data:', { title, desc, date });
+    
     const task = {
       title,
       desc,
@@ -29,10 +56,20 @@ router.post('/', async (req, res) => {
       createdAt: new Date(),
       updatedAt: new Date()
     };
+    
+    console.log('Attempting to save task:', task);
     const result = await db.collection('tasks').insertOne(task);
-    const newTask = await db.collection('tasks').findOne({ _id: result.insertedId });
-    res.status(201).json(newTask);
+    console.log('Insert result:', result);
+    
+    if (!result.acknowledged) {
+      throw new Error('Failed to insert task');
+    }
+    
+    task._id = result.insertedId;
+    console.log('Task saved successfully:', task);
+    res.status(201).json(task);
   } catch (error) {
+    console.error('Error creating task:', error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -42,24 +79,28 @@ router.put('/:id', async (req, res) => {
   try {
     const db = req.app.locals.db;
     const { title, desc, date, status } = req.body;
+    
     const result = await db.collection('tasks').findOneAndUpdate(
       { _id: new ObjectId(req.params.id) },
-      { 
-        $set: { 
-          title, 
-          desc, 
-          date, 
+      {
+        $set: {
+          title,
+          desc,
+          date,
           status,
           updatedAt: new Date()
-        } 
+        }
       },
       { returnDocument: 'after' }
     );
+
     if (!result.value) {
       return res.status(404).json({ message: 'Task not found' });
     }
+    
     res.json(result.value);
   } catch (error) {
+    console.error('Error updating task:', error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -68,14 +109,17 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const db = req.app.locals.db;
-    const result = await db.collection('tasks').findOneAndDelete(
+    const result = await db.collection('tasks').deleteOne(
       { _id: new ObjectId(req.params.id) }
     );
-    if (!result.value) {
+
+    if (result.deletedCount === 0) {
       return res.status(404).json({ message: 'Task not found' });
     }
+    
     res.json({ message: 'Task deleted', taskId: req.params.id });
   } catch (error) {
+    console.error('Error deleting task:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -85,6 +129,7 @@ router.get('/search', async (req, res) => {
   try {
     const db = req.app.locals.db;
     const { query } = req.query;
+    
     const tasks = await db.collection('tasks')
       .find({
         $or: [
@@ -94,8 +139,10 @@ router.get('/search', async (req, res) => {
       })
       .sort({ createdAt: -1 })
       .toArray();
+      
     res.json(tasks);
   } catch (error) {
+    console.error('Error searching tasks:', error);
     res.status(500).json({ message: error.message });
   }
 });
