@@ -4,143 +4,212 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Task Manager</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
 </head>
-<body>
-  <header>
-    <h1>Task Manager</h1>
-    <div id="auth-section">
-      <!-- Show when user is not logged in -->
-      <div id="login-register-forms">
-        <form id="login-form" class="auth-form">
-          <input type="email" id="login-email" placeholder="Email" required>
-          <input type="password" id="login-password" placeholder="Password" required>
-          <button type="submit">Login</button>
-        </form>
-        <button id="show-register">New User? Register</button>
-        
-        <form id="register-form" class="auth-form" style="display: none;">
-          <input type="text" id="register-username" placeholder="Username" required>
-          <input type="email" id="register-email" placeholder="Email" required>
-          <input type="password" id="register-password" placeholder="Password" required>
-          <button type="submit">Register</button>
-        </form>
-      </div>
-      
-      <!-- Show when user is logged in -->
-      <div id="user-info" style="display: none;">
-        <span id="username-display"></span>
-        <button id="logout-btn">Logout</button>
-      </div>
+<body class="bg-light">
+  <header class="bg-primary text-white py-3">
+    <div class="container">
+      <h1 class="h3 mb-0">Task Manager</h1>
     </div>
   </header>
-  <main id="main-content">
-    <section class="task-form">
-      <h2>Add a New Task</h2>
-      <form id="task-form">
-        <label for="task-title">Title:</label>
-        <input type="text" id="task-title" placeholder="Enter task title" required>
-        
-        <label for="task-desc">Description:</label>
-        <textarea id="task-desc" placeholder="Enter task description" required></textarea>
-        
-        <label for="task-category">Category:</label>
-        <select id="task-category" required>
-          <option value="">Select a category</option>
-          <option value="work">Work</option>
-          <option value="personal">Personal</option>
-        </select>
-        
-        <label for="task-priority">Priority:</label>
-        <select id="task-priority" required>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-        
-        <label for="task-status">Status:</label>
-        <select id="task-status" required>
-          <option value="pending">Pending</option>
-          <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-        </select>
-        
-        <label for="task-date">Due Date:</label>
-        <input type="date" id="task-date" required>
-        
-        <button type="submit">Add Task</button>
+
+  <main class="container my-4">
+    <div id="login-register-forms">
+      <!-- Login Form -->
+      <form id="login-form" class="card p-4 mb-3 mx-auto" style="max-width: 400px;">
+        <h2 class="h4 mb-3">Login</h2>
+        <div class="mb-3">
+          <input type="email" id="login-email" class="form-control" placeholder="Email" required>
+        </div>
+        <div class="mb-3">
+          <input type="password" id="login-password" class="form-control" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
       </form>
-    </section>
-    
-    <section class="task-list">
-      <h2>Task List</h2>
-      <div class="task-filters">
-        <input type="text" id="search-input" placeholder="Search tasks...">
-        <select id="category-filter">
-          <option value="">All Categories</option>
-          <option value="work">Work</option>
-          <option value="personal">Personal</option>
-        </select>
+
+      <!-- Register Form -->
+      <form id="register-form" class="card p-4 mb-3 mx-auto" style="max-width: 400px; display: none;">
+        <h2 class="h4 mb-3">Register</h2>
+        <div class="mb-3">
+          <input type="text" id="register-username" class="form-control" placeholder="Username" required>
+        </div>
+        <div class="mb-3">
+          <input type="email" id="register-email" class="form-control" placeholder="Email" required>
+        </div>
+        <div class="mb-3">
+          <input type="password" id="register-password" class="form-control" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Register</button>
+      </form>
+      <button id="show-register" class="btn btn-link d-block mx-auto">New user? Register here</button>
+    </div>
+
+    <div id="user-info" style="display: none;">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <span id="username-display" class="h5 mb-0"></span>
+        <button id="logout-btn" class="btn btn-outline-danger">Logout</button>
       </div>
-      
+    </div>
+
+    <section id="main-content" style="display: none;">
+      <!-- Task Form -->
+      <form id="task-form" class="card p-4 mb-4">
+        <h2 class="h4 mb-3">Add New Task</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <input type="text" id="task-title" class="form-control" placeholder="Task Title" required>
+          </div>
+          <div class="col-md-6">
+            <input type="date" id="task-date" class="form-control" required>
+          </div>
+          <div class="col-md-12">
+            <textarea id="task-desc" class="form-control" placeholder="Task Description" rows="3"></textarea>
+          </div>
+          <div class="col-md-4">
+            <select id="task-category" class="form-select" required>
+              <option value="">Select Category</option>
+              <option value="work">Work</option>
+              <option value="personal">Personal</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select id="task-priority" class="form-select" required>
+              <option value="">Select Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select id="task-status" class="form-select" required>
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary">Add Task</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Task Filters -->
+      <div class="task-filters card p-3 mb-4">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <input type="text" id="search-input" class="form-control" placeholder="Search tasks...">
+          </div>
+          <div class="col-md-4">
+            <select id="category-filter" class="form-select">
+              <option value="">All Categories</option>
+              <option value="work">Work</option>
+              <option value="personal">Personal</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task Tables -->
       <div class="task-tables">
-        <div class="task-column" data-status="pending">
-          <h3>Pending</h3>
-          <table class="task-table" id="pending-tasks">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Priority</th>
-                <th>Due Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Pending tasks will be added here -->
-            </tbody>
-          </table>
+        <!-- Pending Tasks Column -->
+        <div class="task-column-container">
+          <div class="task-column" data-status="pending">
+            <div class="column-header bg-warning bg-opacity-10">
+              <h3 class="text-warning">Pending</h3>
+            </div>
+            <div class="column-content">
+              <div class="status-dropzone" data-status="pending">
+                <div class="dropzone-text">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>Drop tasks here</span>
+                </div>
+              </div>
+              <div class="tasks-container">
+                <div class="tasks-list" id="pending-tasks">
+                  <!-- Tasks will be dynamically added here -->
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="task-column" data-status="in-progress">
-          <h3>In Progress</h3>
-          <table class="task-table" id="in-progress-tasks">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Priority</th>
-                <th>Due Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- In-progress tasks will be added here -->
-            </tbody>
-          </table>
+        <!-- In Progress Tasks Column -->
+        <div class="task-column-container">
+          <div class="task-column" data-status="in-progress">
+            <div class="column-header bg-info bg-opacity-10">
+              <h3 class="text-info">In Progress</h3>
+            </div>
+            <div class="column-content">
+              <div class="status-dropzone" data-status="in-progress">
+                <div class="dropzone-text">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>Drop tasks here</span>
+                </div>
+              </div>
+              <div class="tasks-container">
+                <div class="tasks-list" id="in-progress-tasks">
+                  <!-- Tasks will be dynamically added here -->
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="task-column" data-status="completed">
-          <h3>Completed</h3>
-          <table class="task-table" id="completed-tasks">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Priority</th>
-                <th>Due Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Completed tasks will be added here -->
-            </tbody>
-          </table>
+        <!-- Completed Tasks Column -->
+        <div class="task-column-container">
+          <div class="task-column" data-status="completed">
+            <div class="column-header bg-success bg-opacity-10">
+              <h3 class="text-success">Completed</h3>
+            </div>
+            <div class="column-content">
+              <div class="status-dropzone" data-status="completed">
+                <div class="dropzone-text">
+                  <i class="fas fa-arrow-down"></i>
+                  <span>Drop tasks here</span>
+                </div>
+              </div>
+              <div class="tasks-container">
+                <div class="tasks-list" id="completed-tasks">
+                  <!-- Tasks will be dynamically added here -->
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   </main>
+
+  <!-- Task Details Modal -->
+  <div class="modal fade" id="taskDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="task-details-content"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary edit-task">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          <button type="button" class="btn btn-danger delete-task">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -99,211 +99,286 @@ body {
     }
   }
 
-  /* Update the task table styles */
+  /* Task table layout */
   .task-tables {
-    display: flex;
-    gap: 30px;
-    margin-top: 20px;
-    overflow-x: auto;
-    padding-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin: 0 auto;
+    max-width: 1800px;
+    padding: 0 24px;
+  }
+
+  .task-column-container {
+    min-height: 600px;
+    height: calc(100vh - 350px);
   }
 
   .task-column {
-    flex: 1;
-    min-width: 450px;
-    max-width: 600px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 20px;
-  }
-
-  .task-column h3 {
-    color: #333;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #eee;
-    text-align: center;
-    font-size: 1.2rem;
-  }
-
-  .task-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-top: 10px;
-  }
-
-  .task-table th,
-  .task-table td {
-    padding: 16px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-    vertical-align: top;
-  }
-
-  .task-table th {
-    font-weight: 600;
-    color: #666;
-    background-color: #f8f9fa;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-
-  .task-table td {
-    font-size: 0.95rem;
-    line-height: 1.4;
-  }
-
-  /* Task content styling */
-  .task-content {
-    margin-bottom: 8px;
-  }
-
-  .task-title {
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 8px;
-    display: block;
-    font-size: 1rem;
-  }
-
-  .task-description {
-    color: #666;
-    font-size: 0.9rem;
-    margin-top: 8px;
-    max-height: none;
-    overflow: visible;
-    display: block;
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-    -webkit-box-orient: unset;
-    line-orient: unset;
-    line-height: 1.4;
-  }
-
-  /* Adjust column widths for wider layout */
-  .task-table th:nth-child(1),
-  .task-table td:nth-child(1) { width: 45%; }
-  .task-table th:nth-child(2),
-  .task-table td:nth-child(2) { width: 15%; }
-  .task-table th:nth-child(3),
-  .task-table td:nth-child(3) { width: 12%; }
-  .task-table th:nth-child(4),
-  .task-table td:nth-child(4) { width: 13%; }
-  .task-table th:nth-child(5),
-  .task-table td:nth-child(5) { width: 15%; }
-
-  /* Priority colors with better contrast */
-  .priority-high { 
-    color: #dc3545;
-    font-weight: 600;
-  }
-  .priority-medium { 
-    color: #fd7e14;
-    font-weight: 600;
-  }
-  .priority-low { 
-    color: #28a745;
-    font-weight: 600;
-  }
-
-  /* Task actions styling */
-  .task-actions {
+    height: 100%;
     display: flex;
-    gap: 8px;
-    justify-content: flex-start;
-    white-space: nowrap;
+    flex-direction: column;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
-  .task-actions button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
+  /* Column Header */
+  .column-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .column-header h3 {
+    font-size: 1.1rem;
+    margin: 0;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Column Content */
+  .column-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+    overflow: hidden;
+  }
+
+  /* Dropzone */
+  .status-dropzone {
+    padding: 20px;
+    min-height: 80px;
+    border: 2px dashed #e2e8f0;
+    border-radius: 10px;
+    background-color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s ease;
   }
 
-  .task-actions button.edit {
-    background-color: #007bff;
-    color: white;
+  .dropzone-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #94a3b8;
+    font-size: 0.9rem;
   }
 
-  .task-actions button.edit:hover {
-    background-color: #0056b3;
+  /* Tasks Container */
+  .tasks-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
   }
 
-  .task-actions button.delete {
-    background-color: #dc3545;
-    color: white;
+  .tasks-list {
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 8px;
   }
 
-  .task-actions button.delete:hover {
-    background-color: #c82333;
-  }
-
-  /* Empty state styling */
-  .empty-state {
-    text-align: center;
-    color: #6c757d;
-    padding: 20px !important;
-    font-style: italic;
-  }
-
-  /* Drag and drop styling */
-  .task-table tr {
+  /* Task Item */
+  .task-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
     cursor: move;
     transition: all 0.2s ease;
-    background-color: white;
   }
 
-  .task-table tr:hover {
-    background-color: #f8f9fa;
+  .task-item:hover {
+    border-color: #cbd5e0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
 
-  .task-table tr.dragging {
-    opacity: 0.5;
-    background-color: #f0f0f0;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  .task-info {
+    flex: 1;
+    min-width: 0;
   }
 
-  .task-column.drag-over {
-    background-color: rgba(0, 0, 0, 0.05);
-    border: 2px dashed #666;
-  }
-
-  /* Category badge styling */
-  .category-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.85rem;
+  .task-title {
+    font-size: 1rem;
     font-weight: 500;
+    color: #2d3748;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .category-work {
-    background-color: #e3f2fd;
-    color: #0d47a1;
+  /* Priority Badge */
+  .badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: center;
   }
 
-  .category-personal {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 24px;
+    color: #94a3b8;
+    font-style: italic;
   }
 
-  /* Update responsive breakpoint for wider layout */
+  /* Scrollbar Styling */
+  .tasks-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .tasks-list::-webkit-scrollbar-track {
+    background: #f8fafc;
+  }
+
+  .tasks-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 3px;
+  }
+
+  /* Container adjustments */
+  .container {
+    max-width: 1800px;
+  }
+
+  /* Table styles */
+  .task-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .task-table tr {
+    border-bottom: 1px solid #edf2f7;
+    cursor: move;
+  }
+
+  .task-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .task-table td {
+    padding: 12px;
+  }
+
+  /* Task item styling */
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #edf2f7;
+    transition: background-color 0.2s;
+  }
+
+  .task-item:hover {
+    background-color: #f8fafc;
+  }
+
+  .task-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-title:hover {
+    color: #4299e1;
+  }
+
+  /* Badge styles */
+  .priority-high {
+    background-color: #FEE2E2;
+    color: #DC2626;
+  }
+
+  .priority-medium {
+    background-color: #FEF3C7;
+    color: #D97706;
+  }
+
+  .priority-low {
+    background-color: #DCFCE7;
+    color: #15803D;
+  }
+
+  /* Dropzone styling */
+  .status-dropzone {
+    padding: 20px;
+    min-height: 80px;
+    border: 2px dashed #e2e8f0;
+    margin: 16px;
+    border-radius: 10px;
+    background-color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .status-dropzone.drag-over {
+    background-color: #EFF6FF;
+    border-color: #3B82F6;
+    border-style: solid;
+  }
+
+  /* Scroll area */
+  .table-responsive {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f8fafc;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 3px;
+  }
+
+  /* Responsive adjustments */
+  @media (min-width: 1800px) {
+    .task-tables {
+        padding: 0;
+    }
+  }
+
+  @media (max-width: 1600px) {
+    .task-tables {
+        max-width: 1400px;
+    }
+  }
+
   @media (max-width: 1400px) {
     .task-tables {
-      flex-direction: column;
-      align-items: center;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .task-tables {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
     }
     
-    .task-column {
-      min-width: 100%;
-      max-width: none;
+    .task-item {
+        padding: 12px 16px;
     }
   }
 
@@ -330,14 +405,26 @@ body {
     min-width: 200px;
   }
 
-  /* Add these styles to your existing CSS */
+  /* Drag and drop styling */
   .task-table tr {
     cursor: move;
+    transition: all 0.2s ease;
+    background-color: white;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .task-table tr:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
 
   .task-table tr.dragging {
     opacity: 0.5;
     background-color: #f0f0f0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   }
 
   .task-column.drag-over {
@@ -345,26 +432,234 @@ body {
     border: 2px dashed #666;
   }
 
-  /* Prevent text selection while dragging */
+  /* Add styles for the task details popup */
+  .task-details-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-width: 500px;
+    width: 90%;
+    outline: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    min-width: 400px; /* Ensure minimum width for buttons */
+  }
+
+  .task-details-popup.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .popup-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .task-details-content {
+    margin-bottom: 20px;
+  }
+
+  .task-details-content div {
+    margin-bottom: 10px;
+  }
+
+  .task-details-content label {
+    font-weight: bold;
+    display: inline-block;
+    width: 100px;
+  }
+
+  .close-popup {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #666;
+  }
+
+  .close-popup:hover {
+    color: #333;
+  }
+
+  /* Make the task title clickable */
+  .task-title:hover {
+    color: #007bff;
+  }
+
+  /* Update popup styles to include action buttons */
+  .popup-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #edf2f7;
+  }
+
+  .popup-actions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .popup-actions .edit {
+    background-color: #ebf5ff;
+    color: #3182ce;
+  }
+
+  .popup-actions .edit:hover {
+    background-color: #bee3f8;
+  }
+
+  .popup-actions .delete {
+    background-color: #fff5f5;
+    color: #e53e3e;
+  }
+
+  .popup-actions .delete:hover {
+    background-color: #fed7d7;
+  }
+
+  /* Hide action buttons in the table */
+  .task-table td:nth-child(5),
+  .task-table th:nth-child(5) {
+    display: none;
+  }
+
+  /* Adjust the title column width since we removed actions column */
+  .task-table th:nth-child(1),
+  .task-table td:nth-child(1) { 
+    width: 100%; 
+  }
+
+  /* Custom styles to complement Bootstrap */
+  .border-dashed {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+  }
+
+  .status-dropzone {
+    min-height: 80px;
+    transition: all 0.3s ease;
+  }
+
+  .status-dropzone.drag-over {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    border-color: #0d6efd;
+    border-style: solid;
+    transform: scale(1.02);
+  }
+
   .task-table tr {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-
-  /* Add visual feedback for draggable items */
-  .task-table tr:hover {
-    background-color: #f8f9fa;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  }
-
-  /* Add a subtle transition for smoother visual feedback */
-  .task-table tr {
-    transition: all 0.2s ease;
-  }
-
-  .dragging {
-    opacity: 0.5;
     cursor: move;
+  }
+
+  .task-table tr.dragging {
+    opacity: 0.5;
+    background-color: #f8f9fa;
+  }
+
+  .category-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  .category-work {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+  }
+
+  .category-personal {
+    background-color: rgba(111, 66, 193, 0.1);
+    color: #6f42c1;
+  }
+
+  .priority-high {
+    color: #dc3545;
+    font-weight: 600;
+  }
+
+  .priority-medium {
+    color: #fd7e14;
+    font-weight: 600;
+  }
+
+  .priority-low {
+    color: #198754;
+    font-weight: 600;
+  }
+
+  .task-description {
+    color: #6c757d;
+    font-size: 0.875rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Ensure the card body doesn't add unnecessary padding */
+  .card-body.status-dropzone {
+    padding: 1rem;
+  }
+
+  /* Make sure tables fill the available space */
+  .task-column .table-responsive {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .task-column .task-table {
+    flex: 1;
+  }
+
+  /* Card header styling */
+  .card-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .card-header h3 {
+    font-size: 1.1rem;
+    margin: 0;
+    text-align: center;
+  }
+
+  /* Empty state styling */
+  .text-center.text-muted {
+    padding: 24px;
+    font-style: italic;
+    color: #94a3b8;
   }

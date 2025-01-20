@@ -54,15 +54,19 @@ router.patch('/:id', auth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid updates!' });
     }
 
-    const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, user: req.user.userId },
-      req.body,
-      { new: true, runValidators: true }
-    );
+    // Find the task first to ensure it exists and belongs to the user
+    const task = await Task.findOne({ 
+      _id: req.params.id, 
+      user: req.user.userId 
+    });
 
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
     }
+
+    // Update the task with new values
+    updates.forEach(update => task[update] = req.body[update]);
+    await task.save();
 
     res.json(task);
   } catch (error) {
