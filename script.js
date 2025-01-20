@@ -115,13 +115,25 @@ async function fetchTasks() {
 
 async function searchTasks(query) {
     try {
+        if (query.length < 2) {
+            filterTasks(); // Use local filtering for short queries
+            return;
+        }
+        
         const response = await fetch(`${API_URL}/tasks/search?q=${query}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        tasks = await response.json(); // Store search results globally
-        renderTasks(tasks);
+        
+        if (!response.ok) {
+            throw new Error('Search failed');
+        }
+        
+        const searchResults = await response.json();
+        tasks = searchResults; // Update local tasks array
+        filterTasks(); // Apply any active filters to search results
     } catch (error) {
         console.error('Error searching tasks:', error);
+        alert('Failed to search tasks');
     }
 }
 
@@ -491,44 +503,42 @@ taskForm.addEventListener('submit', async (e) => {
     }
 });
 
-searchInput.addEventListener('input', debounce((e) => {
-    const query = e.target.value;
-    if (query.length >= 2) {
-        searchTasks(query);
-    } else {
-        fetchTasks();
-    }
-}, 300));
+searchInput.addEventListener('input', debounce(filterTasks, 300));
 
-statusFilter.addEventListener('change', () => {
-    const status = statusFilter.value;
+statusFilter.addEventListener('change', filterTasks);
+categoryFilter.addEventListener('change', filterTasks);
+
+// Add this function to handle all filtering
+function filterTasks() {
     if (!tasks) return; // Guard against undefined tasks
     
-    if (status) {
-        const filteredTasks = tasks.filter(task => task.status === status);
-        renderTasks(filteredTasks);
-    } else {
-        renderTasks(tasks); // Show all tasks if no status selected
-    }
-});
-
-categoryFilter.addEventListener('change', () => {
+    const status = statusFilter.value;
     const category = categoryFilter.value;
-    const status = statusFilter.value;
+    const searchQuery = searchInput.value.toLowerCase();
     
-    if (!tasks) return; // Guard against undefined tasks
+    let filteredTasks = [...tasks]; // Create a copy of tasks array
     
-    if (!category && !status) {
-        renderTasks(tasks); // Show all tasks if no filters
-    } else {
-        const filteredTasks = tasks.filter(task => {
-            const matchesCategory = !category || task.category === category;
-            const matchesStatus = !status || task.status === status;
-            return matchesCategory && matchesStatus;
-        });
-        renderTasks(filteredTasks);
+    // Apply status filter
+    if (status) {
+        filteredTasks = filteredTasks.filter(task => task.status === status);
     }
-});
+    
+    // Apply category filter
+    if (category) {
+        filteredTasks = filteredTasks.filter(task => task.category === category);
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+        filteredTasks = filteredTasks.filter(task => 
+            task.title.toLowerCase().includes(searchQuery) ||
+            task.description.toLowerCase().includes(searchQuery)
+        );
+    }
+    
+    // Render filtered tasks
+    renderTasks(filteredTasks);
+}
 
 // Utility Functions
 function debounce(func, wait) {
