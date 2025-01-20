@@ -93,9 +93,18 @@ function showUnauthenticatedUI() {
 async function fetchTasks() {
     try {
         const response = await fetch(`${API_URL}/tasks`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Cache-Control': 'no-cache'  // Prevent caching
+            }
         });
-        tasks = await response.json(); // Store tasks globally
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch tasks');
+        }
+        
+        const freshTasks = await response.json();
+        tasks = freshTasks; // Update our local tasks array
         renderTasks(tasks);
     } catch (error) {
         console.error('Error fetching tasks:', error);
@@ -176,9 +185,12 @@ function renderTasks(tasks) {
     // Render tasks for each status
     Object.entries(groupedTasks).forEach(([status, statusTasks]) => {
         const tasksList = document.getElementById(`${status}-tasks`);
-        if (!tasksList) return;
+        if (!tasksList) {
+            console.error(`Task list not found for status: ${status}`);
+            return;
+        }
         
-        tasksList.innerHTML = ''; // Clear existing tasks
+        tasksList.innerHTML = '';
         
         if (statusTasks.length === 0) {
             tasksList.innerHTML = `
@@ -199,10 +211,25 @@ function renderTasks(tasks) {
             taskElement.addEventListener('dragstart', handleDragStart);
             taskElement.addEventListener('dragend', handleDragEnd);
             
+            // Format the due date
+            const dueDate = new Date(task.dueDate);
+            const formattedDate = dueDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
             taskElement.innerHTML = `
                 <div class="task-info">
                     <div class="task-title" onclick="showTaskDetails(${JSON.stringify(task).replace(/"/g, '&quot;')})">
                         ${task.title}
+                    </div>
+                    <div class="task-meta">
+                        <span class="category-badge category-${task.category}">
+                            ${task.category}
+                        </span>
+                        <span class="due-date ${isOverdue(dueDate) ? 'overdue' : ''}">
+                            <i class="fas fa-calendar-alt"></i> ${formattedDate}
+                        </span>
                     </div>
                 </div>
                 <span class="badge priority-${task.priority}">${task.priority}</span>
@@ -211,6 +238,9 @@ function renderTasks(tasks) {
             tasksList.appendChild(taskElement);
         });
     });
+    
+    // Initialize drag and drop after rendering
+    initializeDragAndDrop();
 }
 
 // Update the drag and drop handlers
@@ -219,57 +249,97 @@ function handleDragStart(e) {
     if (!taskItem) return;
     
     taskItem.classList.add('dragging');
-    e.dataTransfer.setData('application/json', JSON.stringify({
+    
+    // Find the closest task column to get the correct status
+    const taskColumn = taskItem.closest('.task-column');
+    const currentStatus = taskColumn ? taskColumn.dataset.status : null;
+    
+    if (!currentStatus) {
+        console.error('Could not determine task status');
+        return;
+    }
+    
+    // Store task data
+    const taskData = {
         taskId: taskItem.dataset.taskId,
-        currentStatus: taskItem.closest('.task-column').dataset.status
-    }));
+        currentStatus: currentStatus
+    };
+    
+    // Set drag data
+    e.dataTransfer.setData('text/plain', JSON.stringify(taskData));
     e.dataTransfer.effectAllowed = 'move';
 }
 
 function handleDragEnd(e) {
-    const taskItem = e.target.closest('.task-item');
-    if (taskItem) {
-        taskItem.classList.remove('dragging');
-    }
-    document.querySelectorAll('.status-dropzone').forEach(dropzone => {
-        dropzone.classList.remove('drag-over');
+    // Remove dragging class from all items
+    document.querySelectorAll('.task-item').forEach(item => {
+        item.classList.remove('dragging');
+    });
+    
+    // Remove drag-over class from all dropzones
+    document.querySelectorAll('.status-dropzone').forEach(zone => {
+        zone.classList.remove('drag-over');
     });
 }
 
 function handleDragOver(e) {
+    // Prevent default to allow drop
     e.preventDefault();
+    
     const dropzone = e.target.closest('.status-dropzone');
-    if (dropzone) {
-        e.dataTransfer.dropEffect = 'move';
-        document.querySelectorAll('.status-dropzone').forEach(zone => {
-            zone.classList.remove('drag-over');
-        });
-        dropzone.classList.add('drag-over');
-    }
+    if (!dropzone) return;
+    
+    // Set the dropEffect to move
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Remove drag-over class from all dropzones
+    document.querySelectorAll('.status-dropzone').forEach(zone => {
+        zone.classList.remove('drag-over');
+    });
+    
+    // Add drag-over class to current dropzone
+    dropzone.classList.add('drag-over');
 }
 
 async function handleDrop(e) {
     e.preventDefault();
+    
     const dropzone = e.target.closest('.status-dropzone');
     if (!dropzone) return;
     
     dropzone.classList.remove('drag-over');
     
     try {
-        const data = JSON.parse(e.dataTransfer.getData('application/json'));
-        const { taskId, currentStatus } = data;
-        const newStatus = dropzone.dataset.status;
+        // Get the dragged task data
+        const taskData = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (!taskData.taskId || !taskData.currentStatus) {
+            throw new Error('Invalid task data');
+        }
         
-        if (currentStatus !== newStatus) {
-            const task = tasks.find(t => t._id === taskId);
+        const newStatus = dropzone.dataset.status;
+        if (!newStatus) {
+            throw new Error('Invalid drop target');
+        }
+        
+        // Only update if status changed
+        if (taskData.currentStatus !== newStatus) {
+            // Find the task in our local array
+            const task = tasks.find(t => t._id === taskData.taskId);
             if (!task) throw new Error('Task not found');
-
-            // Only send necessary fields for update
+            
+            // Prepare update data
             const updateData = {
                 status: newStatus
             };
 
-            const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+            console.log('Updating task status:', {
+                taskId: taskData.taskId,
+                oldStatus: taskData.currentStatus,
+                newStatus: newStatus
+            });
+
+            // Update task status in backend
+            const response = await fetch(`${API_URL}/tasks/${taskData.taskId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -277,36 +347,57 @@ async function handleDrop(e) {
                 },
                 body: JSON.stringify(updateData)
             });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update task status');
-            }
-
-            // Update local task data
-            task.status = newStatus;
             
-            // Re-render tasks without fetching
+            const updatedTask = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(updatedTask.error || 'Failed to update task status');
+            }
+            
+            // Update the task in our local array
+            const taskIndex = tasks.findIndex(t => t._id === taskData.taskId);
+            if (taskIndex !== -1) {
+                tasks[taskIndex] = { ...tasks[taskIndex], ...updatedTask };
+            }
+            
+            // Re-render tasks immediately with updated data
             renderTasks(tasks);
             
-            // Fetch tasks to ensure sync with server
+            // Fetch fresh data from server to ensure sync
             await fetchTasks();
         }
     } catch (error) {
         console.error('Error updating task status:', error);
         alert('Failed to update task status. Please try again.');
+        // Refresh tasks to ensure consistent state
         await fetchTasks();
     }
 }
 
 // Update the initialization function
 function initializeDragAndDrop() {
+    // Remove existing listeners first
+    document.querySelectorAll('.status-dropzone').forEach(dropzone => {
+        dropzone.removeEventListener('dragover', handleDragOver);
+        dropzone.removeEventListener('drop', handleDrop);
+        dropzone.removeEventListener('dragleave', handleDragLeave);
+    });
+    
     // Add drag and drop event listeners to dropzones
-    const dropzones = document.querySelectorAll('.status-dropzone');
-    dropzones.forEach(dropzone => {
+    document.querySelectorAll('.status-dropzone').forEach(dropzone => {
         dropzone.addEventListener('dragover', handleDragOver);
         dropzone.addEventListener('drop', handleDrop);
+        dropzone.addEventListener('dragleave', handleDragLeave);
     });
+}
+
+// Add dragleave handler
+function handleDragLeave(e) {
+    e.preventDefault();
+    const dropzone = e.target.closest('.status-dropzone');
+    if (dropzone) {
+        dropzone.classList.remove('drag-over');
+    }
 }
 
 // Event Listeners
@@ -428,14 +519,15 @@ function debounce(func, wait) {
     };
 }
 
-// Update initialization to remove drag and drop
+// Add this to document ready
 document.addEventListener('DOMContentLoaded', () => {
-    initializeDragAndDrop();
     if (token) {
         try {
             currentUser = JSON.parse(localStorage.getItem('currentUser'));
             showAuthenticatedUI();
-            fetchTasks();
+            fetchTasks().then(() => {
+                initializeDragAndDrop();
+            });
         } catch (error) {
             console.error('Error restoring user session:', error);
             logout();
@@ -518,4 +610,9 @@ function showTaskDetails(task) {
     };
     
     modal.show();
+}
+
+// Add helper function to check if task is overdue
+function isOverdue(dueDate) {
+    return new Date(dueDate) < new Date().setHours(0, 0, 0, 0);
 }
